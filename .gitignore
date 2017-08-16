@@ -1,0 +1,63 @@
+
+# Created by https://www.gitignore.io/api/java,gradle,vagrant,ansible
+
+### Ansible ###
+# Ansible retry files
+*.retry
+
+# Test driven development on Ansible with Molecule, Testinfra and pytest
+.cache/
+.idea/
+.molecule/
+.tox/
+__pycache__/
+tests/roles
+*.pyc
+
+### Java ###
+# Compiled class file
+*.class
+
+# Log file
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+
+### Vagrant ###
+.vagrant/
+
+### Gradle ###
+.gradle
+/build/
+
+# Ignore Gradle GUI config
+gradle-app.setting
+
+# Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
+!gradle-wrapper.jar
+
+# Cache of project
+.gradletasknamecache
+
+# # Work around https://youtrack.jetbrains.com/issue/IDEA-116898
+# gradle/wrapper/gradle-wrapper.properties
+
+# End of https://www.gitignore.io/api/java,gradle,vagrant,ansible
+.DS_Store
+/provision/files/wui/css/materialize.min.css
+/provision/files/wui/fonts/roboto/Roboto-Bold.woff

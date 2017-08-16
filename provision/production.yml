@@ -1,0 +1,84 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+    - include: tasks/selinux_disable.yml
+    - include: tasks/yum_update.yml
+
+    - name: install packages
+      yum: name={{ item }} state=installed
+      with_items:
+        - maven
+        - tomcat
+        - java-1.8.0-openjdk
+        - nginx
+        - mariadb-server
+        - mariadb
+        - MySQL-python
+
+    - name: configure nginx (1)
+      lineinfile:
+        dest: /etc/nginx/nginx.conf
+        line: '
+add_header Access-Control-Allow-Origin *;
+add_header Access-Control-Allow-Methods "POST, GET, OPTIONS";
+add_header Access-Control-Allow-Headers "Origin, Authorization, Accept";
+add_header Access-Control-Allow-Credentials true;
+proxy_pass http://localhost:8080;'
+        insertafter: '^[^#]+location / {'
+
+    - name: configure nginx (2)
+      lineinfile:
+        dest: /etc/nginx/nginx.conf
+        line: 'proxy_set_header    Host    $host;
+proxy_set_header    X-Real-IP    $remote_addr;
+proxy_set_header    X-Forwarded-Host       $host;
+proxy_set_header    X-Forwarded-Server    $host;
+proxy_set_header    X-Forwarded-For    $proxy_add_x_forwarded_for;
+client_max_body_size 50M;
+location /wui {
+root /usr/share/nginx/html/wui;
+index index.html;
+}'
+        insertbefore: '^[^#]+location / {'
+
+    - name: copy wui files
+      copy:
+        src: files/wui
+        dest: /usr/share/nginx/html/wui
+        mode: 0666
+
+    - name: start tomcat
+      systemd:
+        name: tomcat.service
+        state: started
+        enabled: yes
+
+    - name: start nginx
+      systemd:
+        name: nginx.service
+        state: started
+        enabled: yes
+
+    - name: make .ssh dir in /root
+      file:
+        path: /root/.ssh
+        state: directory
+        mode: 0755
+
+    - name: install ssh authorized_keys
+      copy:
+        src: files/.ssh/authorized_keys
+        dest: /root/.ssh/authorized_keys
+        mode: 0600
+
+    - name: start mariadb
+      systemd:
+        name: mariadb.service
+        state: started
+        enabled: yes
+
+    - name: create database
+      mysql_db:
+        name: sample_db
+        state: present

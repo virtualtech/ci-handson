@@ -1,0 +1,5 @@
+---
+- lineinfile:
+    dest: /etc/yum.repos.d/puppetlabs-pc1.repo
+    line: 'enabled=0'
+    regexp: '^enabled=1$'

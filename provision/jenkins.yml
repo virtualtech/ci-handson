@@ -1,0 +1,65 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+    - include: tasks/selinux_disable.yml
+    - include: tasks/yum_update.yml
+
+    - name: install packages
+      yum: name={{ item }}  state=installed
+      with_items:
+        - java-1.8.0-openjdk
+        - maven
+        - git
+        - mariadb
+        - mariadb-server
+
+    - name: install jenkins yum repository
+      yum_repository:
+        name: jenkins
+        description: jenkins yum repository
+        baseurl: https://pkg.jenkins.io/redhat-stable/
+
+    - name: install jenkins yum repository key
+      rpm_key:
+        key: https://pkg.jenkins.io/redhat-stable/jenkins.io.key
+
+    - name: install jenkins
+      yum: name=jenkins
+
+    - name: turn off jenkins setup wizard
+      lineinfile:
+        dest: /etc/sysconfig/jenkins
+        regexp: '^JENKINS_JAVA_OPTIONS='
+        line: 'JENKINS_JAVA_OPTIONS="-Djava.awt.headless=true -Djenkins.install.runSetupWizard=false"'
+
+    - name: start jenkins
+      systemd:
+        name: jenkins.service
+        state: started
+        enabled: yes
+
+    - name: make .ssh dir in jenkins user home directory
+      file:
+        path: /var/lib/jenkins/.ssh
+        state: directory
+        owner: jenkins
+        group: jenkins
+        mode: 0755
+
+    - name: install ssh private key
+      copy:
+        src: files/.ssh/id_rsa
+        dest: /var/lib/jenkins/.ssh/id_rsa
+        owner:  jenkins
+        group: jenkins
+        mode: 0600
+
+    - name: start mariadb
+      systemd:
+        name: mariadb.service
+        state: started
+        enabled: yes
+
+    - name: create database
+      shell: mysql -e "CREATE DATABASE IF NOT EXISTS sample_db;"
